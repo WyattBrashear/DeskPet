@@ -12,7 +12,7 @@ def getfilesindirectory(directory):
     files = []
     for root, dirs, filenames in os.walk(directory):
         for filename in filenames:
-            if filename.endswith('.txt'):
+            if filename.endswith('.iso'):
                 files.append(os.path.join(root, filename))
     return files
 
@@ -38,6 +38,16 @@ y = display_y - window_y
 
 os.environ['SDL_VIDEO_WINDOW_POS'] = f"{x},{y}"
 
+try:
+    with open('petmem.json', 'r') as petmemory:
+        petmemory_data = json.load(petmemory)
+    fullness = petmemory_data.get('fullness', 100)
+except FileNotFoundError:
+    print("Pet memory file not found. Setting fullness to 100.")
+    fullness = 100
+except json.JSONDecodeError:
+    print("Error in pet memory file. Setting fullness to 100.")
+    fullness = 100
 try:
     with open('config.json', 'r') as config_file:
         config_data = json.load(config_file)
@@ -83,18 +93,25 @@ screen = pygame.display.set_mode((windoww, windowh), pygame.NOFRAME)
 
 pygame.display.set_caption("Deskpet")
 
-fullness = 100 #fullness level in megabytes
+def save_pet_memory():
+    with open('petmem.json', 'w') as petmemory:
+        json.dump({'fullness': fullness}, petmemory)
 
 
+sprite = pygame.image.load(pet_sprites[random.randint(4,6)]).convert_alpha()
 sleeping = False
 running = True
 while running:
+    randvar = random.randint(0, 100)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.DROPFILE & sleeping == False:
+            filepath = event.file
+            eatFile(filepath)
     #idle animation handling
-    sprite = pygame.image.load(pet_sprites[random.randint(0,3)]).convert_alpha()
-    screen.fill((0,0,0))
+    if sleeping == False:
+        sprite = pygame.image.load(pet_sprites[random.randint(0,3)]).convert_alpha()
     screen.blit(sprite, (50, 50))
     time.sleep(tickspeed)
     pygame.display.flip()
@@ -102,10 +119,27 @@ while running:
     filepath = getfilesindirectory(emergency_food_folder)
     fullness -= hrate
     print("Fullness:", fullness)
-    if fullness <= hthreshold:
+    if fullness <= hthreshold & sleeping == False:
+        filepath = getfilesindirectory(emergency_food_folder)
         print("Hunger threshold reached. Eating file...")
         if filepath:  # Check if filepath is not empty
             eatFile(filepath[0])
         else:
             print(f"No food files found in {emergency_food_folder} to eat.")
+    save_pet_memory()
+    #Sleeping handling
+    if sleeping == False & 25 == random.randint(0, 50):
+        if fullness <= 0:
+            print("Your pet is hungry! it's going to sleep!")
+            sleeping = True
+            sprite = pygame.image.load(pet_sprites[random.randint(4,6)]).convert_alpha()
+        elif fullness > 0:
+            print("Your pet is tired! it's going to sleep!")
+            sleeping = True
+    if sleeping == True:
+        sprite = pygame.image.load(pet_sprites[random.randint(4,6)]).convert_alpha()
+    if randvar < random.randint(0, 100) & sleeping == True:
+        print("Your pet is awake! it had a good nap!")
+        sleeping = False
+        sprite = pygame.image.load(pet_sprites[random.randint(0,3)]).convert_alpha()
 pygame.quit()

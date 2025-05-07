@@ -5,7 +5,7 @@ Deskpet is a small pet that sits on your desktop!
     Prophet Orpheus
     Burger The Cat
     Pizza The Dog
-    Custom Pet!
+    Custom Pet! (edit in config)
 
 # Taking care of your pet
 Your Deskpet eats files. It gets less hungry depending on the size of the file.

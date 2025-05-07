@@ -2,7 +2,7 @@
     "pet": "prophet orpheus",
     "hunger_rate": 1,
     "hunger_threshold": 1,
-    "food_folder":"YOURFOLDERHERE",
+    "food_folder":"/Users/wyattbrashear/Downloads",
     "custom_mode": "false",
     "tickspeed":0.5
 }
