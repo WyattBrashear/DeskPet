@@ -1,0 +1,8 @@
+{
+    "pet": "prophet orpheus",
+    "hunger_rate": 1,
+    "hunger_threshold": 1,
+    "food_folder":"YOURFOLDERHERE",
+    "custom_mode": "false",
+    "tickspeed":0.5
+}
