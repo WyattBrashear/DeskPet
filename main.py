@@ -10,11 +10,11 @@ logging.basicConfig(filename=f'./logs/deskpet{datetime.date.today()}.log', level
 #Setup
 pygame.init()
 logging.info("Deskpet started, pygame initialized.")
-def getfilesindirectory(directory):
+def getfilesindirectory(directory, extension=".iso"):
     files = []
     for root, dirs, filenames in os.walk(directory):
         for filename in filenames:
-            if filename.endswith('.iso'):
+            if filename.endswith(extension):
                 files.append(os.path.join(root, filename))
     return files
 
@@ -45,6 +45,8 @@ try:
     with open('petmem.json', 'r') as petmemory:
         petmemory_data = json.load(petmemory)
     fullness = petmemory_data.get('fullness', 100)
+    sleeping = petmemory_data.get('is_sleeping', False)
+    extension = petmemory_data.get('extension', ".iso")
     logging.info(f"Fullness loaded from petmem.json: {fullness}")
 except FileNotFoundError:
     print("Pet memory file not found. Setting fullness to 100.")
@@ -82,29 +84,30 @@ except json.JSONDecodeError:
     logging.warning("Error in config file. Using default pet.")
 
 
+
 print("Deskpet Version 1.0, Pet:", pet)
 
 if pet == "prophet orpheus":
-    pet_sprites = ["./pets/orpheus/idle.png", "./pets/orpheus/idle2.png","./pets/orpheus/idle3.png", "./pets/orpheus/idle4.png", "./pets/orpheus/sleep.png", "./pets/orpheus/sleep2.png", "./pets/orpheus/sleep3.png"]
+    pet_sprites = ["./pets/orpheus/idle.png", "./pets/orpheus/idle2.png","./pets/orpheus/idle3.png", "./pets/orpheus/idle4.png", "./pets/orpheus/sleep.png", "./pets/orpheus/sleep2.png", "./pets/orpheus/sleep3.png", "./pets/orpheus/background.png", "./pets/orpheus/background2.png"] 
     logging.info("Sprites loaded for prophet orpheus!")
 elif pet == "burger":
-    pet_sprites = ["./pets/burger/idle.png", "./pets/burger/idle2.png", "./pets/burger/idle3.png", "./pets/burger/idle4.png", "./pets/burger/sleep.png", "./pets/burger/sleep2.png", "./pets/burger/sleep3.png"]
+    pet_sprites = ["./pets/burger/idle.png", "./pets/burger/idle2.png", "./pets/burger/idle3.png", "./pets/burger/idle4.png", "./pets/burger/sleep.png", "./pets/burger/sleep2.png", "./pets/burger/sleep3.png", "./pets/burger/background.png", "./pets/burger/background2.png"]
     logging.info("Sprites loaded for burger the dog!")
 elif pet == "pizza":
-    pet_sprites = ["./pets/pizza/idle.png", "./pets/pizza/idle2.png", "./pets/pizza/idle3.png", "./pets/pizza/idle4.png", "./pets/pizza/sleep.png", "./pets/pizza/sleep2.png", "./pets/pizza/sleep3.png"]
+    pet_sprites = ["./pets/pizza/idle.png", "./pets/pizza/idle2.png", "./pets/pizza/idle3.png", "./pets/pizza/idle4.png", "./pets/pizza/sleep.png", "./pets/pizza/sleep2.png", "./pets/pizza/sleep3.png", "./pets/pizza/background.png", "./pets/pizza/background2.png"]
     logging.info("Sprites loaded for pizza the cat!")
 elif custom_mode == True:
     print("Loading custom pet...")
-    pet_sprites = [f"./pets/{pet}/idle.png", f"./pets/{pet}/idle2.png", f"./pets/{pet}/idle3.png", f"./pets/{pet}/idle4.png", f"./pets/{pet}/sleep.png", f"./pets/{pet}/sleep2.png", f"./pets/{pet}/sleep3.png"]
+    pet_sprites = [f"./pets/{pet}/idle.png", f"./pets/{pet}/idle2.png", f"./pets/{pet}/idle3.png", f"./pets/{pet}/idle4.png", f"./pets/{pet}/sleep.png", f"./pets/{pet}/sleep2.png", f"./pets/{pet}/sleep3.png", f"./pets/{pet}/background.png", f"./pets/{pet}/background2.png"]
     logging.info(f"Custom pet sprites loaded for {pet}!")
 else:
     print("Unable to load pet sprites. Defaulting to burger.")
-    pet_sprites = ["./pets/burger/idle.png", "./pets/burger/idle2.png", "./pets/burger/idle3.png",  "./pets/burger/idle4.png", "./pets/burger/sleep.png", "./pets/burger/sleep2.png", "./pets/burger/sleep3.png"]
+    pet_sprites = ["./pets/burger/idle.png", "./pets/burger/idle2.png", "./pets/burger/idle3.png",  "./pets/burger/idle4.png", "./pets/burger/sleep.png", "./pets/burger/sleep2.png", "./pets/burger/sleep3.png", "./pets/burger/background.png", "./pets/burger/background2.png"]
     logging.warning("Unable to load pet sprites. Defaulting to burger.")
 
 print("Sprites loaded for:", pet, pet_sprites)
 time.sleep(tickspeed)
-windoww, windowh = 300, 300
+windoww, windowh = 500, 300
 
 screen = pygame.display.set_mode((windoww, windowh), pygame.NOFRAME)
 
@@ -114,12 +117,15 @@ def save_pet_memory():
     with open('petmem.json', 'w') as petmemory:
         json.dump({'fullness': fullness}, petmemory)
 
-
+w = 0
 sprite = pygame.image.load(pet_sprites[random.randint(4,6)]).convert_alpha()
 sleeping = False
 running = True
 logging.info("Beggining main loop.")
+sprites = [sprite]
 while running:
+    border = pygame.image.load("./assets/border.png")
+    background = pygame.image.load(pet_sprites[random.randint(7,8)]).convert_alpha()
     f1 = int(fullness/100)
     f2 = int(fullness/10)
     randvar = random.randint(0, 100)
@@ -136,7 +142,15 @@ while running:
     if sleeping == False:
         sprite = pygame.image.load(pet_sprites[random.randint(0,3)]).convert_alpha()
         logging.info("idle animation loaded.")
-    screen.blit(sprite, (50, 50))
+    screen.blit(background, (0, 0))
+    screen.blit(border, (0, 0))
+    screen.blit(sprite, (w, 0))
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_a:
+                w -= 10
+            elif event.key == pygame.K_d:
+                w += 10
     pygame.display.flip()
     #hunger handling
     filepath = getfilesindirectory(emergency_food_folder)
@@ -145,7 +159,7 @@ while running:
     print("Fullness:", fullness)
     if fullness <= hthreshold & sleeping == False:
         logging.info("Hunger threshold reached. Looking for food.")
-        filepath = getfilesindirectory(emergency_food_folder)
+        filepath = getfilesindirectory(emergency_food_folder, extension)
         print("Hunger threshold reached. Eating file...")
         if filepath:  # Check if filepath is not empty
             logging.info(f"Emergency food folder contents: {filepath}")
@@ -178,6 +192,14 @@ while running:
         sleeping = False
         sprite = pygame.image.load(pet_sprites[random.randint(0,3)]).convert_alpha()
         sleep_conunter = 0
+    #PET MEMING!!!!
+    if sleeping == True:
+        with open('petmem.json', 'r') as petmemory:
+            petmemory_data = json.load(petmemory)
+        petmemory_data["is_sleeping"] = True
+        with open('petmem.json', 'w') as petmemory:
+            json.dump(petmemory_data, petmemory)
+        
     time.sleep(tickspeed)
     logging.info("Tick complete.")
 pygame.quit()
